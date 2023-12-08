@@ -628,6 +628,13 @@ file_type = {TRACK_TYPE}
             ax.set_ylim(ylims[1], ylims[0])
 
     def plot_label(self, label_ax, width_dpi, h_align='left'):
+        """
+        Plot the label of the track.
+
+        :param label_ax: the axis where to plot the label
+        :param width_dpi: the width of the figure in dpi
+        :param h_align: the horizontal alignment of the label. Options are 'left', 'right' or 'center'
+        """
         if h_align == 'left':
             label_ax.text(0.05, 1, self.properties['title'],
                           horizontalalignment='left', size='large',
@@ -651,7 +658,16 @@ file_type = {TRACK_TYPE}
             # To be able to wrap to the left:
             txt._get_wrap_line_width = lambda: width_dpi
 
-    def plot_y_axis(self, ax, plot_axis):
+    def plot_y_axis(self, ax, plot_axis, transform='no', log_pseudocount=0, y_axis='tranformed', only_at_ticks=False):
+        """
+        Plot the y-axis of the track. Overwrite the GenomeTrack method to have bed specific y-axis plotting.
+        When a color map is used for the color in the .ini file (e.g. coolwarm, Reds), the bed score column mapped to a
+        color.
+
+        :param ax: the axis where to plot the y axis
+        :param plot_axis: whether to plot the axis or not
+        :return: None
+        """
         if self.colormap is not None:
             self.colormap.set_array([])
             GenomeTrack.plot_custom_cobar(self, ax, fraction=1)

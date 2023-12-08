@@ -247,7 +247,11 @@ def parse_arguments(args=None):
 
 
 def main(args=None):
+    """
+    Main function to plot the tracks.
 
+    :param args: arguments to parse. Default is None.
+    """
     args = parse_arguments().parse_args(args)
 
     # Identify the regions to plot:
@@ -276,7 +280,7 @@ def main(args=None):
                      track_label_width=args.trackLabelFraction,
                      plot_regions=regions, plot_width=args.plotWidth)
 
-    # Create dir if dir does not exists:
+    # Create dir if dir does not exist:
     # Modified from https://stackoverflow.com/questions/12517451/automatically-creating-directories-with-file-output
     os.makedirs(os.path.dirname(os.path.abspath(args.outFileName)), exist_ok=True)
 

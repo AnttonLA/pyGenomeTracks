@@ -9,8 +9,9 @@ from pygenometracks._version import __version__
 def parse_arguments(args=None):
 
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-                                     description='Facilitates the creation of a configuration file for pyGenomeTracks. The program takes a list '
-                                                 'of files and does the boilerplate for the configuration file.',
+                                     description='Facilitates the creation of a configuration file for '
+                                                 'pyGenomeTracks. The program takes a list of files and does the '
+                                                 'boilerplate for the configuration file.',
                                      usage="%(prog)s --trackFiles <bigwig file> <bed file> etc. -o tracks.ini")
 
     # define the arguments
