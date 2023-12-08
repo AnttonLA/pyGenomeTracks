@@ -34,14 +34,9 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 warnings.simplefilter(action='ignore', category=DeprecationWarning)
 warnings.simplefilter(action='ignore', category=ImportWarning)
 
-# import warnings
-# warnings.filterwarnings('error')
-
 FORMAT = "[%(levelname)s:%(filename)s:%(lineno)s - %(funcName)20s()] %(message)s"
 logging.basicConfig(format=FORMAT)
 log = logging.getLogger(__name__)
-# logging.basicConfig()
-# log = logging.getLogger("tracksClass")
 log.setLevel(logging.DEBUG)
 
 DEFAULT_TRACK_HEIGHT = 0.5  # in centimeters
@@ -50,11 +45,11 @@ DEFAULT_MARGINS = {'left': 0.04, 'right': 0.92, 'bottom': 0.03, 'top': 0.97}
 
 
 class VType(object):
-    """The VType object is a holder for all vertical types
-    which will be plotted above other tracks.
-
-    It is expected that all VType has a plot method
     """
+    The VType object is a holder for all vertical types which will be plotted above other tracks.
+    It is expected that VType objects always has a plot method.
+    """
+
     DEFAULTS_PROPERTIES = {}
     NECESSARY_PROPERTIES = []
     SYNONYMOUS_PROPERTIES = {}
@@ -114,6 +109,10 @@ class VType(object):
 
 
 class VlineType(VType):
+    """
+    Extends the VType class to plot vertical lines across all tracks.
+    """
+
     TYPE = 'vlines'
     OPTIONS_TXT = f"""
 # Mandatory:
@@ -164,15 +163,15 @@ type = {TYPE}
     def plot(self, axis_list, figure, chrom_region, start_region, end_region):
         """
         If the zorder is positive:
-        Plots lines from the top of the first plot to the bottom
-        of the last plot at the specified positions.
+        Plots lines from the top of the first plot to the bottom of the last plot at the specified positions.
         Else:
         Plots vlines on each track
 
         :param axis_list: list of plotted axis
-        :param chrom_region chromosome name
-        :param start_region start position
-        :param end_region end position
+        :param figure: matplotlib figure
+        :param chrom_region: chromosome name
+        :param start_region: start position
+        :param end_region: end position
 
         :return: None
         """
@@ -202,6 +201,10 @@ type = {TYPE}
 
 
 class VhighlightType(VType):
+    """
+    Highlight a whole region across all tracks.
+    """
+
     TYPE = 'vhighlight'
     OPTIONS_TXT = f"""
 # Mandatory:
@@ -285,10 +288,7 @@ type = {TYPE}
 
 class MultiDict(OrderedDict):
     """
-    Class to allow identically named
-    sections in configuration file
-    by appending the section number as
-    for example:
+    Class to allow identically named sections in configuration file by appending the section number as for example:
     1. section name
     """
     _unique = 0
@@ -301,11 +301,32 @@ class MultiDict(OrderedDict):
 
 
 class PlotTracks(object):
+    """
+    Object to plot tracks. Methods are:
+    - get_available_tracks: returns a dictionary of all available tracks
+    - get_available_types: returns a dictionary of all available types
+    - get_tracks_height: returns a list of the height of each track
+    - plot: plots the tracks in the given region
+    - parse_tracks: parses a configuration file
+    - close_files: closes all files
+    - check_fil_exists: checks if a file or list of files exist
+    - guess_filetype: guesses the file type based on the file name
+    - cm2inch: converts centimeters to inches
+    - print_elapsed: prints the elapsed time for the log
 
-    def __init__(self, tracks_file, fig_width=DEFAULT_FIGURE_WIDTH,
-                 fig_height=None, fontsize=None, dpi=None,
-                 track_label_width=0.1,
-                 plot_regions=None, plot_width=None):
+    """
+    def __init__(self, tracks_file, fig_width=DEFAULT_FIGURE_WIDTH, fig_height=None, fontsize=None, dpi=None,
+                 track_label_width=0.1, plot_regions=None, plot_width=None):
+        """
+        :param tracks_file: path to the .ini configuration file
+        :param fig_width: width of the figure in centimeters
+        :param fig_height: height of the figure in centimeters
+        :param fontsize: fontsize of the track titles
+        :param dpi: dpi of the figure
+        :param track_label_width: width of the track title in the figure
+        :param plot_regions: a list of tuples [(chrom1, start1, end1), (chrom2, start2, end2)]
+        :param plot_width: width of the plot in centimeters
+        """
         self.fig_width = fig_width
         self.fig_height = fig_height
         self.dpi = dpi
@@ -356,6 +377,9 @@ class PlotTracks(object):
 
     @staticmethod
     def get_available_tracks():
+        """
+        Returns a dictionary of all available tracks
+        """
         avail_tracks = {}
         work = [GenomeTrack]
         while work:
@@ -382,19 +406,13 @@ class PlotTracks(object):
 
     def get_tracks_height(self, start_region=None, end_region=None):
         """
-        The main purpose of the following loop is
-        to get the height of each of the tracks
-        because for the Hi-C the height is variable with respect
-        to the range being plotted, the function is called
-        when each plot is going to be printed.
+        The main purpose of the following loop is to get the height of each of the tracks because for the Hi-C the
+        height is variable with respect to the range being plotted, the function is called when each plot is going to
+        be printed.
 
-        Args:
-            start_region: start of the region to plot.
-                          Only used in case the plot is a Hi-C matrix
-            end_region: end of the region to plot.
-                        Only used in case the plot is a Hi-C matrix
-
-        Returns:
+        :param start_region: start of the region to plot. Only used in case the plot is a Hi-C matrix
+        :param end_region: end of the region to plot. Only used in case the plot is a Hi-C matrix
+        :return: a list of the height of each track
 
         """
         track_height = []
@@ -470,19 +488,27 @@ class PlotTracks(object):
 
         return track_height
 
-    def plot(self, file_name, chrom, start, end, title=None,
-             h_align_titles='left', decreasing_x_axis=False):
-        track_height = self.get_tracks_height(start_region=start,
-                                              end_region=end)
+    def plot(self, file_name, chrom, start, end, title=None, h_align_titles='left', decreasing_x_axis=False):
+        """
+        Plot the tracks in the given region. The region is specified by the chrom, start and end parameters.
+
+        :param file_name: name of the file to save the plot
+        :param chrom: chromosome name
+        :param start: start position
+        :param end: end position
+        :param title: title of the plot
+        :param h_align_titles: horizontal alignment of the track titles. Can be 'left', 'center' or 'right'
+        :param decreasing_x_axis: if True, the x-axis is inverted
+        :return: None
+        """
+        track_height = self.get_tracks_height(start_region=start, end_region=end)
 
         if self.fig_height:
             fig_height = self.fig_height
         else:
-            fig_height = sum(track_height) / \
-                (DEFAULT_MARGINS['top'] - DEFAULT_MARGINS['bottom'])
+            fig_height = sum(track_height) / (DEFAULT_MARGINS['top'] - DEFAULT_MARGINS['bottom'])
 
-        log.debug(f"Figure size in cm is {self.fig_width} x {fig_height}."
-                  f" Dpi is set to {self.dpi}\n")
+        log.debug(f"Figure size in cm is {self.fig_width} x {fig_height}. Dpi is set to {self.dpi}\n")
         fig = plt.figure(figsize=self.cm2inch(self.fig_width, fig_height))
 
         fig.subplots_adjust(wspace=0, hspace=0.0,
@@ -499,8 +525,7 @@ class PlotTracks(object):
                                              width_ratios=self.width_ratios,
                                              wspace=0.01)
         axis_list = []
-        # skipped_tracks is the count of tracks that have the
-        # 'overlay_previous' parameter and should be skipped
+        # skipped_tracks is the count of tracks that have the 'overlay_previous' parameter and should be skipped
         skipped_tracks = 0
         plot_axis = None
         for idx, track in enumerate(self.track_obj_list):
@@ -537,10 +562,11 @@ class PlotTracks(object):
                 plot_axis.set_xlim(end, start)
             else:
                 plot_axis.set_xlim(start, end)
+
+            # Plot the track and the additional axis
             track.plot(plot_axis, chrom, start, end)
             track.plot_y_axis(y_axis, plot_axis)
-            track.plot_label(label_axis, width_dpi=width_dpi,
-                             h_align=h_align_titles)
+            track.plot_label(label_axis, width_dpi=width_dpi, h_align=h_align_titles)
 
             if track.properties['overlay_previous'] == 'share-y':
                 plot_axis.set_ylim(ylim)
@@ -558,8 +584,8 @@ class PlotTracks(object):
         """
         Parses a configuration file
 
-        :param tracks_file: file path containing the track configuration
-        :param plot_regions: a list of tuple [(chrom1, start1, end1), (chrom2, start2, end2)]
+        :param tracks_file: file path containing the track configuration (.ini file)
+        :param plot_regions: a list of tuples [(chrom1, start1, end1), (chrom2, start2, end2)]
                              on which the data should be loaded
                              here the vlines and the vhightlight
         :return: None
@@ -576,17 +602,14 @@ class PlotTracks(object):
             track_options = dict({"section_name": section_name})
             all_keywords = [i[0] for i in parser.items(section_name)]
             # First we check if there is a skip set to true:
-            if 'skip' in all_keywords and \
-               parser.getboolean(section_name, 'skip'):
+            if 'skip' in all_keywords and parser.getboolean(section_name, 'skip'):
                 # In this case we just do not explore the section
                 continue
-            # We will append properties dictionnaries
-            # to the track_list or type_list
+            # We will append properties dictionaries to the track_list or type_list
             # Then the types are treated slightly differently:
             if 'type' in all_keywords and parser.get(section_name, 'type') in self.available_types:
                 track_options['type'] = parser.get(section_name, 'type')
-                track_options['track_class'] = \
-                    self.available_types[track_options['type']]
+                track_options['track_class'] = self.available_types[track_options['type']]
             # If the sections are spacer or x-axis we fill the file_type:
             # (They are special sections where the title defines the track type)
             elif section_name.endswith('[spacer]'):
@@ -598,40 +621,26 @@ class PlotTracks(object):
             # For the others we need to have a 'file_type'
             # Either the file_type is part of the keywords
             elif 'file_type' in all_keywords:
-                track_options['file_type'] = parser.get(section_name,
-                                                        'file_type')
+                track_options['file_type'] = parser.get(section_name, 'file_type')
                 if track_options['file_type'] not in self.available_tracks:
-                    raise InputError(f"Section {section_name}: the file_type "
-                                     f"{track_options['file_type']} does not"
-                                     " exists.\npossible file_type are:"
-                                     f"{self.available_tracks.keys()}.")
-                track_options['track_class'] = \
-                    self.available_tracks[track_options['file_type']]
+                    raise InputError(f"Section {section_name}: the file_type {track_options['file_type']} does not "
+                                     f"exist.\npossible file_type are: {self.available_tracks.keys()}.")
+                track_options['track_class'] = self.available_tracks[track_options['file_type']]
             # Or we guess it from the file:
             elif 'file' in all_keywords:
-                track_options['file'] = parser.get(section_name,
-                                                   'file')
-                track_options['file_type'] = \
-                    self.guess_filetype(track_options,
-                                        self.available_tracks)
-                track_options['track_class'] = \
-                    self.available_tracks[track_options['file_type']]
+                track_options['file'] = parser.get(section_name, 'file')
+                track_options['file_type'] = self.guess_filetype(track_options, self.available_tracks)
+                track_options['track_class'] = self.available_tracks[track_options['file_type']]
             else:
-                raise InputError(f"Section {section_name}: there is no file_type nor file "
-                                 "specified and it is not a [spacer] nor a "
-                                 "[x-axis] section. This is not a valid "
-                                 "section.")
-            # Now we should have a 'track_class' set.
-            # We can get for it all the necessary and possible keywords
+                raise InputError(f"Section {section_name}: there is no file_type nor file specified and it is not a "
+                                 f"[spacer] nor a [x-axis] section. This is not a valid section.")
+            # Now we should have a 'track_class' set. We can get for it all the necessary and possible keywords
             track_class = track_options['track_class']
             NECESSARY_PROPERTIES = track_class.NECESSARY_PROPERTIES
             for necessary_name in NECESSARY_PROPERTIES:
                 if necessary_name not in all_keywords:
-                    raise InputError(f"The section {section_name} is "
-                                     "describing a object of"
-                                     f" type {track_class} but the necessary "
-                                     f"property {necessary_name}"
-                                     " is not part of the config file.")
+                    raise InputError(f"The section {section_name} is describing a object of type {track_class} but "
+                                     f"the necessary property {necessary_name} is not part of the config file.")
             unused_keys = []
             # Now we can proceed with the keywords:
             for name, value in parser.items(section_name):
@@ -639,73 +648,46 @@ class PlotTracks(object):
                 if ' ' in name:
                     old_name = name
                     name = '_'.join(name.split(' '))
-                    log.warning(f"Deprecated Warning: The section {section_name} "
-                                f"uses parameter {old_name} but there is no more "
-                                "parameter with space in name. "
-                                f"Will be substituted by {name}.\n")
+                    log.warning(f"Deprecated Warning: The section {section_name} uses parameter {old_name} but there "
+                                f"is no more parameter with space in name. Will be substituted by {name}.\n")
                 else:
                     old_name = name
-                # end
                 SYNONYMOUS_PROPERTIES = track_class.SYNONYMOUS_PROPERTIES
-                # If the name is part of the synonymous we substitute by
-                # the synonymous value
-                if name in SYNONYMOUS_PROPERTIES and \
-                   value in SYNONYMOUS_PROPERTIES[name]:
+                # If the name is part of the synonymous we substitute by the synonymous value
+                if name in SYNONYMOUS_PROPERTIES and value in SYNONYMOUS_PROPERTIES[name]:
                     track_options[name] = SYNONYMOUS_PROPERTIES[name][value]
                 elif name in track_class.STRING_PROPERTIES:
                     track_options[name] = value
                 elif name in track_class.BOOLEAN_PROPERTIES:
                     try:
-                        # I need to use old_name here else I get a KeyError:
-                        track_options[name] = parser.getboolean(section_name,
-                                                                old_name)
-                        # In the next 1.0 should be:
-                        # track_options[name] = parser.getboolean(section_name,
-                        #                                         name)
+                        # I need to use old_name here else I get a KeyError
+                        track_options[name] = parser.getboolean(section_name, old_name)
                     except ValueError:
-                        raise InputError(f"In section {section_name}, "
-                                         f"{old_name} was set to {value}"
-                                         " whereas we should have a boolean "
-                                         "value. Please, use true or false.")
-                        # In the next 1.0 should be:
-                        #                f"{name} was set to {value}"
+                        raise InputError(f"In section {section_name}, {old_name} was set to {value} whereas we should "
+                                         f"have a boolean value. Please, use true or false.")
                     if value.lower() not in ['true', 'false']:
-                        log.warning("Deprecation Warning: "
-                                    f"In section {section_name}, {name} was "
-                                    f"set to {value}"
-                                    " whereas in the future only"
-                                    " true and false value will be"
-                                    " accepted.\n")
+                        log.warning(f"Deprecation Warning: In section {section_name}, {name} was set to {value} "
+                                    f"whereas in the future only true and false value will be accepted.\n")
                 elif name in track_class.FLOAT_PROPERTIES:
                     try:
                         track_options[name] = float(value)
                     except ValueError:
-                        raise InputError(f"In section {section_name}, {name} "
-                                         f"was set to {value}"
-                                         " whereas we should have a float "
-                                         "value.")
+                        raise InputError(f"In section {section_name}, {name} was set to {value} whereas we should have "
+                                         f"a float value.")
                     min_value, max_value = track_class.FLOAT_PROPERTIES[name]
-                    if track_options[name] < min_value or \
-                       track_options[name] > max_value:
-                        raise InputError(f"In section {section_name}, {name} "
-                                         f"was set to {value}"
-                                         " whereas it should be between "
-                                         f"{min_value} and {max_value}.")
+                    if track_options[name] < min_value or track_options[name] > max_value:
+                        raise InputError(f"In section {section_name}, {name} was set to {value} whereas it should be "
+                                         f"between {min_value} and {max_value}.")
                 elif name in track_class.INTEGER_PROPERTIES:
                     try:
                         track_options[name] = int(value)
                     except ValueError:
-                        raise InputError(f"In section {section_name}, {name} "
-                                         f"was set to {value}"
-                                         " whereas we should have an integer "
-                                         "value.")
+                        raise InputError(f"In section {section_name}, {name} was set to {value} whereas we should have "
+                                         f"an integer value.")
                     min_value, max_value = track_class.INTEGER_PROPERTIES[name]
-                    if track_options[name] < min_value or \
-                       track_options[name] > max_value:
-                        raise InputError(f"In section {section_name}, {name} "
-                                         f"was set to {value}"
-                                         " whereas it should be between "
-                                         f"{min_value} and {max_value}.")
+                    if track_options[name] < min_value or track_options[name] > max_value:
+                        raise InputError(f"In section {section_name}, {name} was set to {value} whereas it should be "
+                                         f"between {min_value} and {max_value}.")
                 else:
                     unused_keys.append(name)
             # If there are unused keys they are printed in a warning.
@@ -751,14 +733,13 @@ class PlotTracks(object):
     @staticmethod
     def check_file_exists(track_dict, tracks_path, is_hic=False):
         """
-        Checks if a file or list of files exists. If the file does not exists
-        tries to check if the file may be relative to the track_file path,
-        in such case the path is updated.
-        :param track_dict: dictionary of track values. Should contain
-                            a 'file' key containing the path of the file
-                            or files to be checked separated by space
-                            For example: file1 file2 file3
+        Checks if a file or list of files exists. If the file does not exist, tries to check if the file may be
+        relative to the track_file path, in such case the path is updated.
+
+        :param track_dict: dictionary of track values. Should contain a 'file' key containing the path of the file or
+                           files to be checked separated by space. For example: file1 file2 file3
         :param tracks_path: path of the tracks file
+        :param is_hic: if True, the file extension is not checked
         :return: None
         """
         for key in track_dict.keys():
@@ -802,12 +783,9 @@ class PlotTracks(object):
     def guess_filetype(track_dict, available_tracks):
         """
 
-        :param track_dict: dictionary of track values with the 'file' key
-                    containing a string path of the file or files.
-                    Only the ending of the last file is used
-                    in case when there are more files
-        :param: available_tracks: list of available tracks
-
+        :param track_dict: dictionary of track values with the 'file' key containing a string path of the file or files.
+                    Only the ending of the last file is used in case when there are more files.
+        :param available_tracks: list of available tracks
         :return: string file type detected
         """
         file_ = track_dict['file'].strip()
@@ -816,15 +794,13 @@ class PlotTracks(object):
             for ending in track_class.SUPPORTED_ENDINGS:
                 if file_.endswith(ending):
                     if file_type == track_class.TRACK_TYPE:
-                        raise InputError("file_type already defined in other"
-                                         " GenomeTrack")
+                        raise InputError("file_type already defined in other GenomeTrack")
                     else:
                         file_type = track_class.TRACK_TYPE
 
         if file_type is None:
-            raise InputError(f"Section {track_dict['section_name']}: can not "
-                             "identify file type. Please"
-                             f" specify the file_type for '{file_}'")
+            raise InputError(f"Section {track_dict['section_name']}: can not identify file type. Please specify the "
+                             f"file_type for '{file_}'")
 
         return file_type
 

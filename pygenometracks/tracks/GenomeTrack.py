@@ -81,21 +81,17 @@ height = 2
                                  f"{default_value}.\n")
                 self.properties[prop] = default_value
 
-    def plot_y_axis(self, ax, plot_axis, transform='no', log_pseudocount=0,
-                    y_axis='transformed', only_at_ticks=False):
+    def plot_y_axis(self, ax, plot_axis, transform='no', log_pseudocount=0, y_axis='tranformed', only_at_ticks=False):
         """
-        Plot the scale of the y axis with respect to the plot_axis
-        Args:
-            ax: axis to use to plot the scale
-            plot_axis: the reference axis to get the max and min.
-            transform: what was the transformation of the data
-            log_pseudocount:
-            y_axis: 'transformed' or 'original'
-            only_at_ticks: False: only min_max are diplayed
-                           True: only ticks values are displayed
+        Plot the scale of the y-axis with respect to the plot_axis.
 
-        Returns:
-
+        :param ax: axis to use to plot the scale
+        :param plot_axis: the reference axis to get the max and min.
+        :param transform: what was the transformation of the data
+        :param log_pseudocount:
+        :param y_axis: 'tranformed' or 'original'
+        :param only_at_ticks: False: only min_max are diplayed. True: only ticks values are displayed
+        :return:
         """
         if not self.properties.get('show_data_range', True):
             return
@@ -142,11 +138,8 @@ height = 2
                 prefix = ""
             exponent = math.floor(np.log10(value))
             value_scien = value / 10 ** exponent
-            # Find the number of decimal values
-            # that would be possible to fit in
-            # max_signs
-            # At max it is max_signs - 1 because you need
-            # one sign before the '.'
+            # Find the number of decimal values that would be possible to fit in  max_signs
+            # At max it is max_signs - 1 because you need one sign before the '.'
             sigfigs = max_signs - 1
             while sigfigs >= 0:
                 if np.abs(value_scien - np.round(value_scien, decimals=sigfigs)) < 1 * 10 ** (-max_signs + 1):
@@ -198,8 +191,15 @@ height = 2
             return prefix + ("{:,." + str(sigfigs) + "f}").format(value) + suffix
 
         def untransform(value, transform, log_pseudocount):
-            # given a numeric value, transform and log_pseudocount
-            # return the value before the transformation
+            """
+            Given a numeric value, transform and log_pseudocount.
+            Return the value before the transformation.
+
+            :param value:
+            :param transform: Type of transformation. Options are 'log', 'log2', 'log10', 'log1p', '-log'
+            :param log_pseudocount:
+            :return: Untransformed value
+            """
             if transform == 'log':
                 return np.exp(value) - log_pseudocount
             elif transform == 'log2':
