@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from .. utilities import InputError, transform
+from ..utilities import InputError, transform
 import logging
 import numpy as np
 from matplotlib import colors as mc
@@ -81,7 +81,8 @@ height = 2
                                  f"{default_value}.\n")
                 self.properties[prop] = default_value
 
-    def plot_y_axis(self, ax, plot_axis, transform='no', log_pseudocount=0, y_axis='tranformed', only_at_ticks=False):
+    def plot_y_axis(self, ax, plot_axis, transform='no', log_pseudocount=0, y_axis='transformed', only_at_ticks=False,
+                    add_ylabel=False, ylabel_text=""):
         """
         Plot the scale of the y-axis with respect to the plot_axis.
 
@@ -89,44 +90,34 @@ height = 2
         :param plot_axis: the reference axis to get the max and min.
         :param transform: what was the transformation of the data
         :param log_pseudocount:
-        :param y_axis: 'tranformed' or 'original'
-        :param only_at_ticks: False: only min_max are diplayed. True: only ticks values are displayed
+        :param y_axis: 'transformed' or 'original'
+        :param only_at_ticks: False: only min_max are displayed. True: only ticks values are displayed
+        :param add_ylabel: True: add a label to the y-axis
         :return:
         """
         if not self.properties.get('show_data_range', True):
             return
 
         def value_to_str(value, max_signs=4, set_zero_max_value=0):
-            r"""
-            given a numeric value, returns a
-            string that removes unneeded decimal places
-            which uses max_signs (excluding the '.')
-
-            >>> value_to_str(12.01, max_signs=4)
-            '12.01'
-            >>> value_to_str(12.001, max_signs=4)
-            '12'
-            >>> value_to_str(12001, max_signs=4)
-            '1.2e4'
-            >>> value_to_str(1201.12, max_signs=4)
-            '1,201'
-            >>> value_to_str(.12001, max_signs=4)
-            '0.12'
-            >>> value_to_str(.00000012001, max_signs=4)
-            '1e-7'
-            >>> value_to_str(.00000012001, max_signs=5)
-            '1.2e-7'
-            >>> value_to_str(-12.01, max_signs=4)
-            '-12'
-            >>> value_to_str(-1201.12, max_signs=4)
-            '-1e3'
-            >>> value_to_str(-.0120112, max_signs=4)
-            '-0.01'
-            >>> value_to_str(-.0000120112, max_signs=4)
-            '-0.00'
-            # >>> value_to_str(120112, max_signs=2)
-            # raise an input Error
             """
+            Given a numeric value, returns a string that removes unneeded decimal places which uses max_signs
+            (excluding the '.')
+
+            Examples:
+            value_to_str(12.01, max_signs=4) -> '12.01'
+            value_to_str(12.001, max_signs=4) -> '12'
+            value_to_str(12001, max_signs=4) -> '1.2e4'
+            value_to_str(1201.12, max_signs=4) -> '1,201'
+            value_to_str(.12001, max_signs=4) -> '0.12'
+            value_to_str(.00000012001, max_signs=4) -> '1e-7'
+            value_to_str(.00000012001, max_signs=5) -> '1.2e-7'
+            value_to_str(-12.01, max_signs=4) -> '-12'
+            value_to_str(-1201.12, max_signs=4) -> '-1e3'
+            value_to_str(-.0120112, max_signs=4) -> '-0.01'
+            value_to_str(-.0000120112, max_signs=4) -> '-0.00'
+            value_to_str(120112, max_signs=2) -> raise an input Error
+            """
+
             original_max_signs = max_signs
             if np.abs(value) <= set_zero_max_value:
                 return "0"
@@ -144,8 +135,7 @@ height = 2
             while sigfigs >= 0:
                 if np.abs(value_scien - np.round(value_scien, decimals=sigfigs)) < 1 * 10 ** (-max_signs + 1):
                     sigfigs -= 1
-                else:
-                    # We stop here
+                else:  # We stop here
                     break
             # We put back sigfigs to the value where it was correct:
             sigfigs += 1
@@ -212,12 +202,10 @@ height = 2
                 return np.exp(- value) - log_pseudocount
 
         ymin, ymax = plot_axis.get_ylim()
-        # If the ticks are closer than epsilon from the top or bottom
-        # The vertical alignment of label is adjusted
+        # If the ticks are closer than epsilon from the top or bottom, the vertical alignment of label is adjusted
         epsilon = (ymax - ymin) / 100
-        # When the ymax and ymin are plotted (when there is no grid)
-        # The tick is shifted inside of epsilon_pretty
-        # To avoid to have only half of the width of the line plotted
+        # When the ymax and ymin are plotted (when there is no grid) the tick is shifted inside of epsilon_pretty to
+        # avoid to have only half of the width of the line plotted
         epsilon_pretty = epsilon
 
         if only_at_ticks:
@@ -277,6 +265,7 @@ height = 2
                 ax.text(0, (ymax + ymin) / 2, ymid_str,
                         verticalalignment='center',
                         horizontalalignment='right', wrap=True)
+
         else:
             # There is a transformation and we want to display original values
             if ymin * ymax < 0:
@@ -300,18 +289,16 @@ height = 2
                 ticks_labels = [value_to_str(v, max_signs=DEFAULT_MAX_SIGNS + 1,
                                              set_zero_max_value=max_abs_value / 1000) for v in original_values]
 
-        # The lower label should be verticalalignment='bottom'
-        # if it corresponds to ymin
+        # The lower label should be verticalalignment='bottom' if it corresponds to ymin
         i = 0
-        if (ymin < ymax and ticks_values[i] <= ymin + epsilon) \
-           or (ymin > ymax and ticks_values[i] >= ymin + epsilon):
+        if (ymin < ymax and ticks_values[i] <= ymin + epsilon) or (ymin > ymax and ticks_values[i] >= ymin + epsilon):
             v_al = 'bottom'
             adjusted_value = labels_pos[i] - epsilon
         else:
             v_al = 'center'
             adjusted_value = labels_pos[i]
-        ax.text(-0.2, adjusted_value, ticks_labels[i],
-                verticalalignment=v_al, horizontalalignment='right')
+
+        ax.text(-0.2, adjusted_value, ticks_labels[i], verticalalignment=v_al, horizontalalignment='right')
         x_pos = [0, 0.5]
         y_pos = [ticks_values[i]] * 2
         for i in range(1, len(ticks_values) - 1):
@@ -321,18 +308,24 @@ height = 2
             x_pos += [0.5, 0, 0.5]
             y_pos += [ticks_values[i]] * 3
 
-        # The upper label should be verticalalignment='top'
-        # if it corresponds to ymax
+        # The upper label should be verticalalignment='top' if it corresponds to ymax
         i = len(ticks_values) - 1
         if (ymin < ymax and ticks_values[i] >= ymax - epsilon) \
-           or (ymin > ymax and ticks_values[i] <= ymax - epsilon):
+                or (ymin > ymax and ticks_values[i] <= ymax - epsilon):
             v_al = 'top'
         else:
             v_al = 'center'
-        ax.text(-0.2, labels_pos[i], ticks_labels[i],
-                verticalalignment=v_al, horizontalalignment='right')
+
+        ax.text(-0.2, labels_pos[i], ticks_labels[i], verticalalignment=v_al, horizontalalignment='right')
         x_pos += [0.5, 0]
         y_pos += [ticks_values[i]] * 2
+
+        if add_ylabel:
+            # Calculate the vertical position to center the label
+            y_center = (ymax + ymin) / 2
+            ax.text(x_pos[0] - 2, y_center, ylabel_text, horizontalalignment='right', verticalalignment='center',
+                    rotation=90, fontsize=self.properties['fontsize'])
+            # The -2 is to avoid the ticks, but there is probably a nicer dynamic way to do this
 
         # Finally plot the line:
         ax.plot(x_pos, y_pos, color='black', linewidth=1)
