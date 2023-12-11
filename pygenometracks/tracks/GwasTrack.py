@@ -11,31 +11,38 @@ class GwasTrack(GenomeTrack):
     SUPPORTED_ENDINGS = ['gwas']  # this is used by make_tracks_file to guess the type of track based on file name
     TRACK_TYPE = 'gwas'
     OPTIONS_TXT = """
-height = 3
+# Title of the track. Usually displayed to the right as a label
 title =
-text =
-# x position of text in the plot (in bp)
-x position =
+# Height of the track    
+height =
+# Type of file
+file_type = gwas
+# File containing the data. We expect an IGV .gwas format file with the columns: CHR, BP, SNP and P. Optionally, extra
+# annotation columns CS and INT can be added.
+file =
+# Y label text
+ylabel =
+# Fontsize of the labels
+fontsize =
 """
     DEFAULTS_PROPERTIES = {'fontsize': 6,
                            'orientation': None,
                            'color': 'grey',
                            'border_color': 'black',
                            'labels': True,
-
                            'line_width': 0.5,
                            'max_labels': 60,
                            'max_value': 1,
                            'min_value': 0,
-                           'fontstyle': 'normal'}
+                           'fontstyle': 'normal',
+                           'ylabel': None}
 
     NECESSARY_PROPERTIES = ['file']
     SYNONYMOUS_PROPERTIES = {}
     POSSIBLE_PROPERTIES = {}
     BOOLEAN_PROPERTIES = []
-    STRING_PROPERTIES = ['title', 'file_type', 'file']
-    FLOAT_PROPERTIES = {'height': [0, np.inf],
-                        'x_position': [0, np.inf]}
+    STRING_PROPERTIES = ['title', 'file_type', 'file', 'ylabel']
+    FLOAT_PROPERTIES = {'height': [0, np.inf], 'fontsize': [0, np.inf]}
     INTEGER_PROPERTIES = {}
 
     def __init__(self, *args, **kwarg):
@@ -54,6 +61,12 @@ x position =
 
         f = self.properties['file']
         df = pd.read_csv(f, sep='\t')
+        # Check the columns of the df include the required columns (CHR, BP, SNP, P)
+        required_columns = ['CHR', 'BP', 'SNP', 'P']
+        for c in required_columns:
+            if c not in df.columns:
+                raise ValueError(f"File {f} does not contain required column {c}")
+
         x = df['BP']
 
         def floor(val):
@@ -69,37 +82,37 @@ x position =
                 return val
 
         y = df['P'].apply(floor)
-        # print text at position x = self.properties['x position'] and y = 0.5 (center of the plot)
 
-        labels = [item.get_text() for item in ax.get_yticklabels()]
         ax.scatter(x, y, s=10, color='grey')
 
         ax.set_ylim(bottom=0, top=1)
 
         # PLOT LEAD VARIANTS, CS COL MARKED AS 1
+        if 'CS' in df.columns:
+            sub = df[df.CS == 'YES']
 
-        sub = df[df.CS == 'YES']
+            x = sub['BP'].tolist()
+            y = sub['P'].apply(floor).tolist()
 
-        x = sub['BP'].tolist()
-        y = sub['P'].apply(floor).tolist()
-        names = sub['INT'].tolist()
+        if 'INT' in df.columns:  # TODO: this is temporary. Needs to be far more robust.
+            # Names will be a list with '' in the positions where INT is not YES and the value of the SNP column otherwise.
+            names = sub.apply(lambda row: row['SNP'] if row['INT'] == 'YES' else '', axis=1).tolist()
 
         ax.scatter(x, y, s=40, color='red', marker='h')
 
         for i, n in enumerate(names):
             xy = (x[i], y[i])
+            ax.text(xy[0], xy[1], n, fontsize=12, ha='center', va='bottom')
 
-    def plot_y_axis(self, ax, plot_axis, transform='no', log_pseudocount=0, y_axis='tranformed', only_at_ticks=False):
+    def plot_y_axis(self, ax, plot_axis, transform='no', log_pseudocount=0, y_axis='transformed', only_at_ticks=False):
         """
         Plot the y-axis of the track. This overwrites the GenomeTrack.plot_y_axis method.
         """
         # Add y axis label
         # TODO: this does not work. The idea is to add a label to the y axis so that we can specify the unit.
         # Currently, I am trying to plot the title of the track, but it does not work:(
-        if self.properties['title']:
-            ax.set_ylabel(self.properties['title'], fontsize=self.properties['fontsize'])
+        GenomeTrack.plot_y_axis(self, ax, plot_axis, transform, log_pseudocount, y_axis, only_at_ticks, add_ylabel=True,
+                                ylabel_text=self.properties['ylabel'])
 
-        GenomeTrack.plot_y_axis(self, ax, plot_axis, transform, log_pseudocount, y_axis, only_at_ticks)
-
-    def plot_label(self, label_ax, width_dpi, h_align='left'):
-        pass
+    #def plot_label(self, label_ax, width_dpi, h_align='left'):
+    #    pass
