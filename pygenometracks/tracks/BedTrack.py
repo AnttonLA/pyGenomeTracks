@@ -273,10 +273,8 @@ file_type = {TRACK_TYPE}
         bed_file_h, total_length = self.get_bed_handler(plot_regions)
         self.bed_type = bed_file_h.file_type
 
-        if self.properties['color'] == 'bed_rgb' and \
-           self.bed_type not in ['bed12', 'bed9']:
-            self.log.warning("*WARNING* Color set to 'bed_rgb', "
-                             "but bed file does not have the rgb field. "
+        if self.properties['color'] == 'bed_rgb' and self.bed_type not in ['bed12', 'bed9']:
+            self.log.warning("*WARNING* Color set to 'bed_rgb', but bed file does not have the rgb field. "
                              f"The color has been set to {DEFAULT_BED_COLOR}.\n")
             self.properties['color'] = DEFAULT_BED_COLOR
 

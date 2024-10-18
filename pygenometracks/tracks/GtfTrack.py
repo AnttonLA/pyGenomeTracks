@@ -174,8 +174,7 @@ file_type = {TRACK_TYPE}
     def get_bed_handler(self, plot_regions=None):
         if not self.properties['global_max_row']:
             # I do the intersection:
-            file_to_open = temp_file_from_intersect(self.properties['file'],
-                                                    plot_regions, AROUND_REGION)
+            file_to_open = temp_file_from_intersect(self.properties['file'], plot_regions, AROUND_REGION)
         else:
             file_to_open = self.properties['file']
 
