@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from .GenomeTrack import GenomeTrack
 import numpy as np
-import pandas as pd  # TODO: package is not otherwise pandas dependent. Should probably remove.
+import pandas as pd  # TODO: package is not otherwise pandas dependent (uses custom scripts to read data in). Should probably do the same.
 
 
 # Expects .gwas file
