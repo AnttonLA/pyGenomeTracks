@@ -82,7 +82,8 @@ height = 2
                 self.properties[prop] = default_value
 
     def plot_y_axis(self, ax, plot_axis, transform='no', log_pseudocount=0,
-                    y_axis='transformed', only_at_ticks=False):
+                    y_axis='transformed', only_at_ticks=False,
+                    add_ylabel=False, ylabel_text=''):
         """
         Plot the scale of the y axis with respect to the plot_axis
         Args:
@@ -93,6 +94,8 @@ height = 2
             y_axis: 'transformed' or 'original'
             only_at_ticks: False: only min_max are diplayed
                            True: only ticks values are displayed
+            add_ylabel: if True, add a label to the y axis.
+            ylabel_text: the text to add to the y axis.
 
         Returns:
 
@@ -333,6 +336,14 @@ height = 2
                 verticalalignment=v_al, horizontalalignment='right')
         x_pos += [0.5, 0]
         y_pos += [ticks_values[i]] * 2
+
+        if add_ylabel:
+            # Calculate the vertical position to center the label
+            y_center = (ymax + ymin) / 2
+            ax.text(x_pos[0] - 2, y_center, ylabel_text, horizontalalignment='right', verticalalignment='center',
+                    rotation=90, fontsize=self.properties['fontsize'])
+            # The -2 is to avoid the ticks, but there is probably a nicer dynamic way to do this
+
 
         # Finally plot the line:
         ax.plot(x_pos, y_pos, color='black', linewidth=1)
