@@ -422,7 +422,7 @@ class MyBasePairFormatter(Formatter):
             if abs(xp) < 1e-8:
                 xp = 0
             if len(self.locs) < 2 or x == self.locs[-2]:
-                return self.format.format(xp) + ' ' + self.unit
+                return self.format.format(xp) + '' + self.unit  # Remove the space before the unit
             else:
                 return self.format.format(xp)
 

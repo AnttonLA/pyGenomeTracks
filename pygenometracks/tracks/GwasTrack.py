@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 from .GenomeTrack import GenomeTrack
 import numpy as np
-import pandas as pd  # TODO: package is not otherwise pandas dependent (uses custom scripts to read data in). Should probably do the same.
+import \
+    pandas as pd  # TODO: package is not otherwise pandas dependent (uses custom scripts to read data in). Should probably do the same.
 
 
 # Expects .gwas file
@@ -40,14 +41,16 @@ color =
                            'y_values_format': 'pval',
                            'y_axis_max_val': None,
                            'id_fontsize': 12,
+                           'id_position': 'center',
                            'cs_dotsize': 45}
 
     NECESSARY_PROPERTIES = ['file']
     SYNONYMOUS_PROPERTIES = {}
-    POSSIBLE_PROPERTIES = {'y_values_format': ['PP', '-log10', 'pval']}
+    POSSIBLE_PROPERTIES = {'y_values_format': ['PP', '-log10', 'pval'], 'id_position': ['center', 'left', 'right']}
     BOOLEAN_PROPERTIES = []
     STRING_PROPERTIES = ['title', 'file_type', 'file', 'ylabel', 'y_values_format', 'color']
-    FLOAT_PROPERTIES = {'height': [0, np.inf], 'fontsize': [0, np.inf], 'id_fontsize': [0, np.inf], 'cs_dotsize': [0, np.inf], 'y_axis_max_val': [0, np.inf]}
+    FLOAT_PROPERTIES = {'height': [0, np.inf], 'fontsize': [0, np.inf], 'id_fontsize': [0, np.inf],
+                        'cs_dotsize': [0, np.inf], 'y_axis_max_val': [0, np.inf]}
     INTEGER_PROPERTIES = {}
 
     def __init__(self, *args, **kwarg):
@@ -108,8 +111,8 @@ color =
             """
             if val > 0.95:
                 return 0.95
-            elif val < max_y/20:
-                return max_y/20
+            elif val < max_y / 20:
+                return max_y / 20
             else:
                 return val
 
@@ -141,15 +144,17 @@ color =
                 y = sub['P'].tolist()
 
         if 'INT' in df.columns:  # TODO: this is temporary. Needs to be far more robust.
-            # Names will be a list with '' in the positions where INT is not YES and the value of the SNP column otherwise.
+            # 'names' will be a list. It will have the value of the SNP column if INT = 1 and '' if INT != 1
             names = sub.apply(lambda row: row['SNP'] if row['INT'] == 1 else '', axis=1).tolist()
 
         ax.scatter(x, y, s=self.properties['cs_dotsize'], color=self.properties['color'], marker='o',
                    edgecolors='black', linewidths=.66)
-        print("NAMES: ", names)
+
+        # Add labels to the points with INT = 1
         for i, n in enumerate(names):
             xy = (x[i], y[i])
-            ax.text(xy[0], xy[1] + 0.01, n, fontsize=self.properties['id_fontsize'], ha='center', va='bottom', snap=True)
+            ax.text(xy[0], xy[1] + 1.5, n, fontsize=self.properties['id_fontsize'], ha='center', va='bottom', snap=True)
+            # Note we might want to change the offset depending on the plot (originally 0.01)
 
     def plot_y_axis(self, ax, plot_axis, transform='no', log_pseudocount=0, y_axis='transformed', only_at_ticks=False,
                     add_ylabel=True, ylabel_text=None):

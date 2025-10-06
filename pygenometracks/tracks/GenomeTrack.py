@@ -248,7 +248,6 @@ height = 2
             except InputError:
                 ticks_labels = [value_to_str(t, max_signs=DEFAULT_MAX_SIGNS + 1,
                                              set_zero_max_value=max_abs_value / 1000) for t in original_values]
-
         elif transform == 'no' or y_axis == 'transformed':
             # This is a linear scale
             # plot something that looks like this:
@@ -314,7 +313,7 @@ height = 2
             v_al = 'center'
             adjusted_value = labels_pos[i]
         ax.text(-0.2, adjusted_value, ticks_labels[i],
-                verticalalignment=v_al, horizontalalignment='right')
+                verticalalignment=v_al, horizontalalignment='right', fontsize=11)  # TODO: hacky fontsize change
         x_pos = [0, 0.5]
         y_pos = [ticks_values[i]] * 2
         for i in range(1, len(ticks_values) - 1):
@@ -333,7 +332,7 @@ height = 2
         else:
             v_al = 'center'
         ax.text(-0.2, labels_pos[i], ticks_labels[i],
-                verticalalignment=v_al, horizontalalignment='right')
+                verticalalignment=v_al, horizontalalignment='right', fontsize=11)  # TODO: hacky fontsize change
         x_pos += [0.5, 0]
         y_pos += [ticks_values[i]] * 2
 

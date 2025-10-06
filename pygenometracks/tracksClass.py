@@ -46,8 +46,8 @@ log.setLevel(logging.DEBUG)
 
 DEFAULT_TRACK_HEIGHT = 0.5  # in centimeters
 DEFAULT_FIGURE_WIDTH = 40  # in centimeters
-DEFAULT_MARGINS = {'left': 0.04, 'right': 0.92, 'bottom': 0.03, 'top': 0.97}
-
+#DEFAULT_MARGINS = {'left': 0.04, 'right': 0.92, 'bottom': 0.03, 'top': 0.97}
+DEFAULT_MARGINS = {'left': 0.06, 'right': 0.92, 'bottom': 0.03, 'top': 0.97}
 
 class VType(object):
     """The VType object is a holder for all vertical types
@@ -551,7 +551,8 @@ class PlotTracks(object):
         for current_type in self.type_obj_list:
             current_type.plot(axis_list, fig, chrom, start, end)
 
-        fig.savefig(file_name, dpi=self.dpi, transparent=False)
+        fig.tight_layout()
+        fig.savefig(file_name, dpi=self.dpi, transparent=False, bbox_inches="tight")
         return fig
 
     def parse_tracks(self, tracks_file, plot_regions=None):
