@@ -3,6 +3,7 @@ from .GenomeTrack import GenomeTrack
 import numpy as np
 import \
     pandas as pd  # TODO: package is not otherwise pandas dependent (uses custom scripts to read data in). Should probably do the same.
+import matplotlib.pyplot as plt  # Matplotlib is already a dependency of pyGenomeTracks. We need it to get the cmap.
 
 
 # Expects .gwas file
@@ -135,26 +136,36 @@ color =
 
         # Plot the Credible Set variants on top of the grey points
         if 'CS' in df.columns:
-            sub = df[df.CS == 1]
+            cs_values = df[df['CS'] != 0]['CS'].unique()
+            cs_values = sorted(cs_values)
 
-            x = sub['BP'].tolist()
-            if self.properties['y_values_format'] == 'PP':
-                y = sub['P'].apply(floor).tolist()
-            else:
-                y = sub['P'].tolist()
+            cmap = plt.get_cmap('tab10')  # change this to 'Set1', 'tab20' or whatever as needed
 
-        if 'INT' in df.columns:  # TODO: this is temporary. Needs to be far more robust.
-            # 'names' will be a list. It will have the value of the SNP column if INT = 1 and '' if INT != 1
-            names = sub.apply(lambda row: row['SNP'] if row['INT'] == 1 else '', axis=1).tolist()
+            for i, cs_val in enumerate(cs_values):
+                cs_subset = df[df['CS'] == cs_val]
+                x_subset = cs_subset['BP']
+                y_subset = cs_subset['P'].apply(floor) if self.properties['y_values_format'] == 'PP' else cs_subset['P']
+                color = cmap(i % cmap.N)  # Wrap around if there are more cs_values than colors in the colormap
 
-        ax.scatter(x, y, s=self.properties['cs_dotsize'], color=self.properties['color'], marker='o',
-                   edgecolors='black', linewidths=.66)
+                ax.scatter(x_subset,
+                           y_subset,
+                           s=self.properties['cs_dotsize'],
+                           facecolor=color,
+                           marker='o',
+                           edgecolors='black',
+                           linewidths=.66)
 
-        # Add labels to the points with INT = 1
-        for i, n in enumerate(names):
-            xy = (x[i], y[i])
-            ax.text(xy[0], xy[1] + 1.5, n, fontsize=self.properties['id_fontsize'], ha='center', va='bottom', snap=True)
-            # Note we might want to change the offset depending on the plot (originally 0.01)
+            # Label the INT=1 variants in that credible set
+            if 'INT' in cs_subset.columns:
+                int_subset = cs_subset[cs_subset['INT'] != 0]
+                for _, row in int_subset.iterrows():
+                    ax.text(row['BP'],
+                            row['P'].apply(floor) if self.properties['y_values_format'] == 'PP' else row['P'] + 1.5,
+                            row['SNP'],
+                            fontsize=self.properties['id_fontsize'],
+                            ha=self.properties['id_position'],
+                            va='bottom',
+                            snap=True)
 
     def plot_y_axis(self, ax, plot_axis, transform='no', log_pseudocount=0, y_axis='transformed', only_at_ticks=False,
                     add_ylabel=True, ylabel_text=None):
