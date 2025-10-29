@@ -105,7 +105,7 @@ color =
 
         x = df['BP']
 
-        def floor(val):
+        def clamp_pp_vals(val):
             """
             Alter values to be between 0.02 and 0.95 to avoid cropping by matplotlib.
             TODO: This is a hacky and temporary solution, and does not apply when P is a P-value and not a PP.
@@ -118,7 +118,7 @@ color =
                 return val
 
         if self.properties['y_values_format'] == 'PP':
-            y = df['P'].apply(floor)
+            y = df['P'].apply(clamp_pp_vals)
             if max_y > 1:
                 print("Y axis cannot be bigger than 1 for Posterior Probabilities!")
                 max_y = 1
@@ -144,7 +144,7 @@ color =
             for i, cs_val in enumerate(cs_values):
                 cs_subset = df[df['CS'] == cs_val]
                 x_subset = cs_subset['BP']
-                y_subset = cs_subset['P'].apply(floor) if self.properties['y_values_format'] == 'PP' else cs_subset['P']
+                y_subset = cs_subset['P'].apply(clamp_pp_vals) if self.properties['y_values_format'] == 'PP' else cs_subset['P']
                 color = cmap(i % cmap.N)  # Wrap around if there are more cs_values than colors in the colormap
 
                 ax.scatter(x_subset,
@@ -155,17 +155,17 @@ color =
                            edgecolors='black',
                            linewidths=.66)
 
-            # Label the INT=1 variants in that credible set
-            if 'INT' in cs_subset.columns:
-                int_subset = cs_subset[cs_subset['INT'] != 0]
-                for _, row in int_subset.iterrows():
-                    ax.text(row['BP'],
-                            row['P'].apply(floor) if self.properties['y_values_format'] == 'PP' else row['P'] + 1.5,
-                            row['SNP'],
-                            fontsize=self.properties['id_fontsize'],
-                            ha=self.properties['id_position'],
-                            va='bottom',
-                            snap=True)
+                # Label the INT=1 variants in that credible set
+                if 'INT' in cs_subset.columns:
+                    int_subset = cs_subset[cs_subset['INT'] != 0]
+                    for _, row in int_subset.iterrows():
+                        ax.text(row['BP'],
+                                row['P'].apply(clamp_pp_vals) if self.properties['y_values_format'] == 'PP' else row['P'] + 1.5,
+                                row['SNP'],
+                                fontsize=self.properties['id_fontsize'],
+                                ha=self.properties['id_position'],
+                                va='bottom',
+                                snap=True)
 
     def plot_y_axis(self, ax, plot_axis, transform='no', log_pseudocount=0, y_axis='transformed', only_at_ticks=False,
                     add_ylabel=True, ylabel_text=None):
