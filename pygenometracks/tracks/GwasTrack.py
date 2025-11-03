@@ -43,7 +43,8 @@ color =
                            'y_axis_max_val': None,
                            'id_fontsize': 12,
                            'id_position': 'center',
-                           'cs_dotsize': 45}
+                           'cs_dotsize': 45,
+                           'ytick_fontsize': 8}
 
     NECESSARY_PROPERTIES = ['file']
     SYNONYMOUS_PROPERTIES = {}
@@ -52,7 +53,7 @@ color =
     STRING_PROPERTIES = ['title', 'file_type', 'file', 'ylabel', 'y_values_format', 'color']
     FLOAT_PROPERTIES = {'height': [0, np.inf], 'fontsize': [0, np.inf], 'id_fontsize': [0, np.inf],
                         'cs_dotsize': [0, np.inf], 'y_axis_max_val': [0, np.inf]}
-    INTEGER_PROPERTIES = {}
+    INTEGER_PROPERTIES = {'ytick_fontsize': [0, 100]}
 
     def __init__(self, *args, **kwarg):
         super(GwasTrack, self).__init__(*args, **kwarg)
@@ -77,7 +78,8 @@ color =
         if 'CS' not in df.columns:
             df['CS'] = '0'  # TODO: these should be set to 0 when we make the change to 0/1 instead of NO/YES. /done now
         if 'INT' not in df.columns:
-            df['INT'] = '0'
+            df['INT'] = 0
+
 
         # For the -log10 scale, calculate the -log10 of the P-value
         if self.properties['y_values_format'] == '-log10':
@@ -160,7 +162,7 @@ color =
                     int_subset = cs_subset[cs_subset['INT'] != 0]
                     for _, row in int_subset.iterrows():
                         ax.text(row['BP'],
-                                row['P'].apply(clamp_pp_vals) if self.properties['y_values_format'] == 'PP' else row['P'] + 1.5,
+                                row['P'].apply(clamp_pp_vals) if self.properties['y_values_format'] == 'PP' else row['P'] + row['INT'],
                                 row['SNP'],
                                 fontsize=self.properties['id_fontsize'],
                                 ha=self.properties['id_position'],
@@ -168,12 +170,12 @@ color =
                                 snap=True)
 
     def plot_y_axis(self, ax, plot_axis, transform='no', log_pseudocount=0, y_axis='transformed', only_at_ticks=False,
-                    add_ylabel=True, ylabel_text=None):
+                    add_ylabel=True, ylabel_text=None, ytick_fontsize=8):
         """
         Override the GenomeTrack.plot_y_axis method to add a y-axis label to the normally label-less y-axis.
         """
         GenomeTrack.plot_y_axis(self, ax, plot_axis, transform, log_pseudocount, y_axis, only_at_ticks, add_ylabel=True,
-                                ylabel_text=self.properties['ylabel'])
+                                ylabel_text=self.properties['ylabel'], ytick_fontsize=self.properties['ytick_fontsize'])
 
     # def plot_label(self, label_ax, width_dpi, h_align='left'):
     #    pass

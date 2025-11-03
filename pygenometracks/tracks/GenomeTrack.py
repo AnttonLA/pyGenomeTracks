@@ -83,7 +83,7 @@ height = 2
 
     def plot_y_axis(self, ax, plot_axis, transform='no', log_pseudocount=0,
                     y_axis='transformed', only_at_ticks=False,
-                    add_ylabel=False, ylabel_text=''):
+                    add_ylabel=False, ylabel_text='', ytick_fontsize=8):
         """
         Plot the scale of the y axis with respect to the plot_axis
         Args:
@@ -313,7 +313,7 @@ height = 2
             v_al = 'center'
             adjusted_value = labels_pos[i]
         ax.text(-0.2, adjusted_value, ticks_labels[i],
-                verticalalignment=v_al, horizontalalignment='right', fontsize=11)  # TODO: hacky fontsize change
+                verticalalignment=v_al, horizontalalignment='right', fontsize=ytick_fontsize)
         x_pos = [0, 0.5]
         y_pos = [ticks_values[i]] * 2
         for i in range(1, len(ticks_values) - 1):
@@ -332,7 +332,7 @@ height = 2
         else:
             v_al = 'center'
         ax.text(-0.2, labels_pos[i], ticks_labels[i],
-                verticalalignment=v_al, horizontalalignment='right', fontsize=11)  # TODO: hacky fontsize change
+                verticalalignment=v_al, horizontalalignment='right', fontsize=ytick_fontsize)
         x_pos += [0.5, 0]
         y_pos += [ticks_values[i]] * 2
 

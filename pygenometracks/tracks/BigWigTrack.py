@@ -85,7 +85,8 @@ file_type = {TRACK_TYPE}
                            'y_axis_values': 'transformed',
                            'second_file': None,
                            'operation': 'file',
-                           'grid': False}
+                           'grid': False,
+                           'ytick_fontsize': 8}
     NECESSARY_PROPERTIES = ['file']
     SYNONYMOUS_PROPERTIES = {'max_value': {'auto': None},
                              'min_value': {'auto': None}}
@@ -107,7 +108,7 @@ file_type = {TRACK_TYPE}
                         'log_pseudocount': [- np.inf, np.inf],
                         'alpha': [0, 1],
                         'height': [0, np.inf]}
-    INTEGER_PROPERTIES = {'number_of_bins': [1, np.inf]}
+    INTEGER_PROPERTIES = {'number_of_bins': [1, np.inf], 'ytick_fontsize': [0, 100]}
     # The color can only be a color
     # negative_color can only be a color or None
 
@@ -221,7 +222,8 @@ file_type = {TRACK_TYPE}
                                              self.properties['transform'],
                                              self.properties['log_pseudocount'],
                                              self.properties['y_axis_values'],
-                                             self.properties['grid'])
+                                             self.properties['grid'],
+                                             ytick_fontsize=self.properties['ytick_fontsize'])
 
     def get_scores(self, bw_var, bw_file, chrom_region, start_region, end_region):
         bw = eval(bw_var)
